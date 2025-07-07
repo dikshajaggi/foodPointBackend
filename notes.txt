@@ -1,0 +1,12 @@
+send data as form data and not in body ---> not required if using https
+add validations
+status codes and their respective messages
+rate limiting ---> to limit the number of login apis
+middleware to check token is present or not for authorization
+
+should we have same db for both rest partner app and user app???
+
+user should be able to add address under different labels like -> home, work, other etc.
+
+
+https://www.linkedin.com/pulse/system-design-architecture-food-delivery-app-like-durgesh-sharma-tdhec/

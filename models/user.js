@@ -33,6 +33,14 @@ const userSchema = new mongoose.Schema({
     isAdmin: {
         type: Boolean,
         default: false
+    },
+    isRestaurantOwner: {
+        type: Boolean,
+        default: false
+    },
+    isDeliveryGuy: {
+        type: Boolean,
+        default: false
     }
 })
 

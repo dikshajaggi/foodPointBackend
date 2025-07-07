@@ -4,9 +4,21 @@ status codes and their respective messages
 rate limiting ---> to limit the number of login apis
 middleware to check token is present or not for authorization
 
-should we have same db for both rest partner app and user app???
+should we have same db for both rest partner app and user app??? -----> yes
 
 user should be able to add address under different labels like -> home, work, other etc.
 
 
 https://www.linkedin.com/pulse/system-design-architecture-food-delivery-app-like-durgesh-sharma-tdhec/
+
+
+// uploading images to cloudinary using multer
+
+takes images from user using multer, 
+save them on local server (this is not mandatory but a good practice)
+upload them to cloudinary
+remove the file from local server once it is uploaded successfully on cloudinary
+
+
+
+register restaurant only when isRestPartner is true

@@ -11,6 +11,11 @@ const addressSchema = new mongoose.Schema({
 })
 
 const outletSchema = new mongoose.Schema({
+    restaurant: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "restaurant",
+        required: true
+    },
     name: {
         type: String,
         required: true
@@ -29,4 +34,6 @@ const outletSchema = new mongoose.Schema({
     }
 })
 
-module.exports = outletSchema
+const outlet = new mongoose.model("outlet", outletSchema)
+
+module.exports = offer

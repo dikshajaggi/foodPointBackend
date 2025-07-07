@@ -2,6 +2,11 @@ const mongoose = require("mongoose");
 const addOnSchema = require("./addOn");
 
 const menuItemsSchema = new mongoose.Schema({
+     restaurant: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "restaurant",
+        required: true
+    },
     label: {
         type: String,
         enum: ["veg", "non-veg", "vegan"],
@@ -32,4 +37,4 @@ const menuItemsSchema = new mongoose.Schema({
 
 const menuItem = new mongoose.model("menuItem", menuItemsSchema)
 
-module.exports = {menuItemsSchema, menuItem}
+module.exports = menuItem

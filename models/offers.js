@@ -1,6 +1,11 @@
 const mongoose = require("mongoose");
 
 const offersSchema = new mongoose.Schema({
+    restaurant: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "restaurant",
+        required: true
+    },
     title: { // no cook wednesday, ipl, diwali, payday sale
         type: String,
         required: true,
@@ -48,4 +53,4 @@ const offersSchema = new mongoose.Schema({
 
 const offer = new mongoose.model("offer", offersSchema)
 
-module.exports = {offersSchema, offer}
+module.exports = offer

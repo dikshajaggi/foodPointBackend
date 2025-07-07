@@ -1,7 +1,4 @@
 const mongoose = require("mongoose");
-const {menuItemsSchema} = require("./menuItems");
-const {offersSchema} = require("./offers");
-const outletSchema = require("./outlet");
 
 const addressSchema = new mongoose.Schema({
     building: { type: String },
@@ -13,7 +10,64 @@ const addressSchema = new mongoose.Schema({
     nearby: { type: String }
 })
 
+const verificationSchema = new mongoose.Schema({
+    gstNo: {
+        type: String,
+        required: true
+    },
+    businessType: {
+        type: String,
+        required: true,
+        enum: ["Sole Proprietor", "Partnership", "Pvt Ltd" ]
+    },
+    fssaiLicenseNumber: {
+        type: String,
+        required: true
+    },
+    email: {
+        type: String,
+        required: true
+    },
+    ownerIdProof: {
+        aadhar:{ 
+            type: String,
+            required: true
+        },
+        pan: {
+            type: String,
+            required: true
+        },
+        photo: {
+            type: String,
+            required: true
+        },
+    },
+    bankDetails: {
+        accountNumber: {
+            type: String,
+            required: true
+        },
+        ifsc: {
+            type: String,
+            required: true
+        },
+        upiId: {
+            type: String,
+            required: true
+        },
+        cancelledCheque: {
+            type: String,
+            required: true
+        },
+    },
+})
+
 const restaurantSchema = new mongoose.Schema({
+   owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "user",
+    required: true
+    },
     name: {
         type: String,
         required: true
@@ -21,9 +75,6 @@ const restaurantSchema = new mongoose.Schema({
     address: {
         type: addressSchema,
         required: true,
-    },
-    outlets: {
-        type: [outletSchema],
     },
     deliveryRadius: {
         type: Number, // in kilometers
@@ -51,9 +102,6 @@ const restaurantSchema = new mongoose.Schema({
         default: true,
         required: true
     },
-    offers: {
-        type: [offersSchema],
-    },
     deliveryChargeRules: {
         freeDeliveryUptoKm: {
         type: Number,
@@ -64,24 +112,23 @@ const restaurantSchema = new mongoose.Schema({
         default: 10 // ₹10/km after free radius
         }
     },
-    menu: {
-        type: [menuItemsSchema],
-        required: true,
-        validate: {
-        validator: function (value) {
-            return value && value.length > 0;
-            },
-            message: "Menu should contain at least one item"
-        }
-    },
     rating: Number,
     cuisines: [String],
     tags: {
-        type: String,
+        type: [String],
         enum: [
-            "Pure Veg", "Halal", "Vegan", "Budget Friendly", "Family Friendly", "New on FoodPoint", "Under ₹200",
-            "Fast Delivery", "New", "Top Rated", "South Indian", "Chinese", "Italian", "Late Night Eats"
+            "Pure Veg", "Vegan", "Budget Friendly", "Family Friendly", "New on FoodPoint", "Under ₹200",
+            "Fast Delivery", "Top Rated", "Late Night Eats"
         ]
+    },
+    verificationDetails: {
+        type: verificationSchema,
+        required: true
+    },
+    verificationStatus: {
+        type: String,
+        enum: ["pending", "verified", "rejected"],
+        default: "pending"
     }
 
 }, {timestamps: true})

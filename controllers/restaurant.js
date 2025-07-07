@@ -8,7 +8,15 @@ const RegisterRestaurant = async(req, res, next) => {
     try {
         const userId = req.user.userId;
         const userExists = await user.findById(userId)
+
         if(!userExists)  return res.status(404).json({ msg: "User not found" });
+
+        if(!userExists.isRestaurantOwner) {
+            return res.status(401).json({msg: "user is not a restaurant partner. contact support team"})
+        }
+
+        const alreadyRegistered = await restaurant.findOne({ owner: userId });
+        if (alreadyRegistered)  return res.status(401).json({msg: "more than one restaurants cannot be register for a single user"})
 
         const restaurantExists = await restaurant.findOne({name: name})
         if (restaurantExists) return res.status(409).json({msg: "restaurant with this name is already registered"})

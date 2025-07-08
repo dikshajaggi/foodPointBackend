@@ -23,3 +23,6 @@ remove the file from local server once it is uploaded successfully on cloudinary
 
 register restaurant only when isRestPartner is true
 one user should be able to add only one restaurant -> and many outlets
+
+
+helmet.js to protect headers

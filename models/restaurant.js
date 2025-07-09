@@ -6,7 +6,7 @@ const addressSchema = new mongoose.Schema({
     city: { type: String, required: true },
     pincode: { type: Number, required: true },
     state: { type: String, required: true },
-    country: { type: String, required: true },
+    country: { type: String, required: true, default: "India" },
     nearby: { type: String }
 })
 
@@ -74,7 +74,6 @@ const restaurantSchema = new mongoose.Schema({
     },
     address: {
         type: addressSchema,
-        required: true,
     },
     deliveryRadius: {
         type: Number, // in kilometers
@@ -86,8 +85,8 @@ const restaurantSchema = new mongoose.Schema({
         match: [/^\d{10,15}$/, "Invalid phone number"]
     },
     thumbnail: {
-        type: String,
-        default: "default-img-url"
+        type: String
+        // default: "default-img-url"
     },
     costForTwo: {
         type: Number,
@@ -123,7 +122,6 @@ const restaurantSchema = new mongoose.Schema({
     },
     verificationDetails: {
         type: verificationSchema,
-        required: true
     },
     verificationStatus: {
         type: String,

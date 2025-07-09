@@ -4,43 +4,117 @@ const user = require("../models/user");
 const safeParse = require("../utils/safeParse");
 const uploadOnCloudinary = require("../utils/uploadOnCloudinary"); 
 
-const RegisterRestaurant = async(req, res, next) => {
-    const {name, address, deliveryRadius, phoneNo, costForTwo, etd, isAvailable, deliveryChargeRules, cuisines, tags, verificationDetails} = req.body
-    try {
-        const userId = req.user.userId;
-        const userExists = await user.findById(userId)
+const RegisterRestaurant = async (req, res, next) => {
+  const {
+    name,
+    address,
+    deliveryRadius,
+    phoneNo,
+    costForTwo,
+    etd,
+    isAvailable,
+    deliveryChargeRules,
+    cuisines,
+    tags,
+    verificationDetails,
+  } = req.body;
 
-        if(!userExists)  return res.status(404).json({ msg: "User not found" });
+  try {
+    const userId = req.user.userId;
+    const userExists = await user.findById(userId);
 
-        if(!userExists.isRestaurantOwner) {
-            return res.status(401).json({msg: "user is not a restaurant partner. contact support team"})
-        }
+    if (!userExists)
+      return res.status(404).json({ msg: "User not found" });
 
-        const alreadyRegistered = await restaurant.findOne({ owner: userId });
-        if (alreadyRegistered)  return res.status(401).json({msg: "more than one restaurants cannot be register for a single user"})
-
-        const restaurantExists = await restaurant.findOne({name: name})
-        if (restaurantExists) return res.status(409).json({msg: "restaurant with this name is already registered"})
-
-        if (!name || !address || !deliveryRadius || !phoneNo || !costForTwo || !etd || !isAvailable || !verificationDetails) {
-            return res.status(400).json({ msg: "Missing required fields" });
-        }
-        
-            let thumbnailUrl = "";
-            if (req.file) {
-                const cloudinaryResponse = await uploadOnCloudinary(req.file.path);
-                if (cloudinaryResponse) thumbnailUrl = cloudinaryResponse.secure_url;
-                const newRestaurant = await restaurant.create({name, address, deliveryRadius, phoneNo, thumbnail: thumbnailUrl, costForTwo, etd, isAvailable, deliveryChargeRules: safeParse(deliveryChargeRules, {}), cuisines: safeParse(cuisines, []), tags: safeParse(tags, []), owner: userId, verificationDetails})
-                return res.status(201).json({ msg: "Restaurant registered", data: newRestaurant });
-            }
-
-        const newRestaurant = await restaurant.create({name, address, deliveryRadius, phoneNo, costForTwo, etd, isAvailable, deliveryChargeRules: safeParse(deliveryChargeRules, {}), cuisines: safeParse(cuisines, []), tags: safeParse(tags, []), owner: userId, verificationDetails})
-        return res.status(201).json({ msg: "Restaurant registered", data: newRestaurant });
-
-    } catch (error) {
-        next(error)
+    if (!userExists.isRestaurantOwner) {
+      return res.status(401).json({
+        msg: "User is not a restaurant partner. Contact support team",
+      });
     }
-}
+
+    const alreadyRegistered = await restaurant.findOne({ owner: userId });
+    if (alreadyRegistered)
+      return res
+        .status(401)
+        .json({ msg: "Only one restaurant can be registered per user" });
+
+    const restaurantExists = await restaurant.findOne({ name });
+    if (restaurantExists)
+      return res
+        .status(409)
+        .json({ msg: "Restaurant with this name already exists" });
+
+    if (
+      !name ||
+      !address ||
+      !deliveryRadius ||
+      !phoneNo ||
+      !costForTwo ||
+      !etd ||
+      isAvailable === undefined ||
+      !verificationDetails
+    ) {
+      return res.status(400).json({ msg: "Missing required fields" });
+    }
+
+    const files = req.files;
+
+    console.log(files, "files")
+
+    const thumbnailFile = files?.thumbnail?.[0];
+    const photoFile = files?.photo?.[0];
+    const chequeFile = files?.cancelledCheque?.[0];
+
+    // Upload all files to Cloudinary
+    const thumbnailUrl = thumbnailFile
+      ? (await uploadOnCloudinary(thumbnailFile.path))?.secure_url
+      : "";
+    const photoUrl = photoFile
+      ? (await uploadOnCloudinary(photoFile.path))?.secure_url
+      : "";
+    const chequeUrl = chequeFile
+      ? (await uploadOnCloudinary(chequeFile.path))?.secure_url
+      : "";
+
+    const parsedVerification = safeParse(verificationDetails, {});
+
+    // Construct full verificationDetails object
+    const fullVerificationDetails = {
+      ...parsedVerification,
+     ownerIdProof : {
+        ...parsedVerification.ownerIdProof,
+        photo: photoUrl,
+      },
+      bankDetails: {
+        ...parsedVerification.bankDetails,
+        cancelledCheque: chequeUrl,
+      },
+    };
+
+    const newRestaurant = await restaurant.create({
+      name,
+      address,
+      deliveryRadius,
+      phoneNo,
+      thumbnail: thumbnailUrl,
+      costForTwo,
+      etd,
+      isAvailable,
+      deliveryChargeRules: safeParse(deliveryChargeRules, {}),
+      cuisines: safeParse(cuisines, []),
+      tags: safeParse(tags, []),
+      owner: userId,
+      verificationDetails: fullVerificationDetails,
+    });
+
+    return res
+      .status(201)
+      .json({ msg: "Restaurant registered", data: newRestaurant });
+  } catch (error) {
+    next(error);
+  }
+};
+
 
 const updateRestaurant = async  (req, res, next) => {
     try {
@@ -49,8 +123,8 @@ const updateRestaurant = async  (req, res, next) => {
         const userExists = await user.findById(userId)
         if(!userExists)  return res.status(404).json({ msg: "User not found" });
 
-        const restaurantExists = await restaurant.findOne({name: name})
-        if (!restaurantExists) return res.status(409).json({msg: "restaurant with this name is not registered"})    
+        const restaurantExists = await restaurant.findOne({ name: name })
+        if (!restaurantExists) return res.status(409).json({ msg: "restaurant with this name is not registered" })    
         
         if (req.file) {
             const cloudinaryResponse = await uploadOnCloudinary(req.file.path);

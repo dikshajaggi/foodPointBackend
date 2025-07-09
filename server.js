@@ -10,6 +10,7 @@ const connectDb = require("./db")
 
 app.use(cors({origin: "http://localhost:1010/"}))
 app.use(express.json())
+app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/auth", authRoutes)
 app.use("/api/me", meRoutes)

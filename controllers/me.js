@@ -14,7 +14,7 @@ const changePassword = async (req, res, next) => {
     userExists.password = newPassword;
     await userExists.save();
 
-    res.status(200).json({ msg: "Password changed successfully" });
+    return res.status(200).json({ msg: "Password changed successfully" });
   } catch (error) {
     next(error);
   }
@@ -38,7 +38,7 @@ const updateProfile = async (req, res, next) => {
             }
             if (username) userExists.username = username;
             await userExists.save();
-            res.status(200).json({ msg: "Changes saved successfully" });
+            return res.status(200).json({ msg: "Changes saved successfully" });
         }
     } catch (error) {
         next(error)
@@ -66,7 +66,7 @@ const deleteSingleAddress = async(req, res, next) => {
 
       userExists.address.filter(item => item.label.toLowerCase() !== label.toLowerCase())
       await userExists.save()
-      res.status(200).json({ msg: "Address deleted successfully" });
+      return res.status(200).json({ msg: "Address deleted successfully" });
     }
   } catch (error) {
       next(error)
@@ -94,7 +94,7 @@ const addAddress = async (req, res, next) => {
     userExists.address.push(address)
     await userExists.save()
 
-    res.status(201).json({ msg: "Address saved successfully" });
+    return res.status(201).json({ msg: "Address saved successfully" });
   } catch (error) {
     next(error)
   }
@@ -106,7 +106,7 @@ const getDetails = async (req, res, next) => {
     const userData = await user.findById(userId).select("-password")
 
     if(!userData) return res.status(404).json({ msg: "User not found" });
-    res.status(200).json({ msg: "User details fetched", data: userData });
+    return res.status(200).json({ msg: "User details fetched", data: userData });
 
   } catch (error) {
     next(error)

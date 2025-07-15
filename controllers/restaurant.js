@@ -167,11 +167,6 @@ const updateRestaurant = async  (req, res, next) => {
 
 const getSpecificRestaurant = async  (req, res, next) => {
     try {
-        const {name} = req.params
-        const userId = req.user.userId
-        const userExists = await user.findById(userId)
-        if(!userExists)  return res.status(404).json({ msg: "User not found" });
-
         const restaurantExists = await restaurant.findOne({name: name})
         if (!restaurantExists) return res.status(409).json({msg: "restaurant with this name is not registered"})    
         return res.status(200).json({msg: "restaurant details fetched successfully", data: restaurantExists})
@@ -182,9 +177,6 @@ const getSpecificRestaurant = async  (req, res, next) => {
 
 const getAllRestaurants = async  (req, res, next) => {
     try {
-        const userId = req.user.userId
-        const userExists = await user.findById(userId)
-        if(!userExists)  return res.status(404).json({ msg: "User not found" });
         const restaurants = await restaurant
         .find({ isAvailable: true, verificationStatus: "verified" })
         .select("-verificationDetails");

@@ -15,8 +15,8 @@ Router.route("/resgister-restaurant").post(getToken, imageUpload.fields([
   //same for frontend also---> the field names should match with multer
 
 Router.route("/update-restaurant").patch(getToken, updateRestaurant)
-Router.route("/all-restaurants").get(getToken, getAllRestaurants)
-Router.route("/:name").get(getToken, getSpecificRestaurant)
+Router.route("/all-restaurants").get(getAllRestaurants)
+Router.route("/:name").get(getSpecificRestaurant)
 Router.route("/add-menu-item").post(getToken, imageUpload.single("image"), addMenuItem)
 Router.route("/remove-menu-item").delete(getToken, removeMenuItem)
 

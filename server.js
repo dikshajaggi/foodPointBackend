@@ -7,10 +7,12 @@ const meRoutes = require("./routes/me")
 const orderRoutes = require("./routes/order")
 const restaurantRoutes = require("./routes/restaurant")
 const connectDb = require("./db")
+const helmet = require("helmet")
 
 app.use(cors({origin: "http://localhost:1010/"}))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }));
+app.use(helmet())
 
 app.use("/api/auth", authRoutes)
 app.use("/api/me", meRoutes)

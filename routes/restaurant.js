@@ -14,7 +14,7 @@ Router.route("/resgister-restaurant").post(getToken, imageUpload.fields([
   //in postman while testing just mention "photo" and "cancelledCheque" and not like this ---> verificationDetails[bankDetails][cancelledCheque]
   //same for frontend also---> the field names should match with multer
 
-Router.route("/update-restaurant").patch(getToken, imageUpload.single("thumbnail"), updateRestaurant)
+Router.route("/update-restaurant").patch(getToken, updateRestaurant)
 Router.route("/all-restaurants").get(getToken, getAllRestaurants)
 Router.route("/:name").get(getToken, getSpecificRestaurant)
 Router.route("/add-menu-item").post(getToken, imageUpload.single("image"), addMenuItem)

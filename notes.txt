@@ -26,3 +26,17 @@ one user should be able to add only one restaurant -> and many outlets
 
 
 helmet.js to protect headers
+
+https://medium.com/@sandeepkella23/why-you-should-avoid-base64-for-image-conversion-in-apis-c8d77830bfd8
+
+we can do this in multer --> 
+const limits = {
+    fileSize: 5 * 1024 * 1024, // Limit file size to 5 MB
+    files: 3 // Limit number of files per request
+  }
+
+  also we can add a rate limiter of max 20req at a time and then block for 10mins 
+
+
+  // add pagination while fetching all restaurants
+  // Use .select() to avoid fetching unnecessary fields (like verification docs). like .select("-verificationDetails") --> remove "verificationDetails"

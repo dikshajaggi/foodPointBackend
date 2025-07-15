@@ -66,15 +66,25 @@ const RegisterRestaurant = async (req, res, next) => {
     const chequeFile = files?.cancelledCheque?.[0];
 
     // Upload all files to Cloudinary
-    const thumbnailUrl = thumbnailFile
-      ? (await uploadOnCloudinary(thumbnailFile.path))?.secure_url
-      : "";
-    const photoUrl = photoFile
-      ? (await uploadOnCloudinary(photoFile.path))?.secure_url
-      : "";
-    const chequeUrl = chequeFile
-      ? (await uploadOnCloudinary(chequeFile.path))?.secure_url
-      : "";
+    if (thumbnailFile) {
+      const res = await uploadOnCloudinary(thumbnailFile.path);
+      if (!res?.secure_url) return res.status(500).json({ msg: "Thumbnail upload failed" });
+      thumbnailUrl = res.secure_url;
+    }
+
+    // Upload photo
+    if (photoFile) {
+      const res = await uploadOnCloudinary(photoFile.path);
+      if (!res?.secure_url) return res.status(500).json({ msg: "Owner photo upload failed" });
+      photoUrl = res.secure_url;
+    }
+
+    // Upload cancelled cheque
+    if (chequeFile) {
+      const res = await uploadOnCloudinary(chequeFile.path);
+      if (!res?.secure_url) return res.status(500).json({ msg: "Cancelled cheque upload failed" });
+      chequeUrl = res.secure_url;
+    }
 
     const parsedVerification = safeParse(verificationDetails, {});
 
@@ -125,14 +135,6 @@ const updateRestaurant = async  (req, res, next) => {
 
         const restaurantExists = await restaurant.findOne({ name: name })
         if (!restaurantExists) return res.status(409).json({ msg: "restaurant with this name is not registered" })    
-        
-        if (req.file) {
-            const cloudinaryResponse = await uploadOnCloudinary(req.file.path);
-            if (cloudinaryResponse?.secure_url) {
-                restaurantExists.thumbnail = cloudinaryResponse.secure_url;
-            }
-        }
-
         if (address) restaurantExists.address = address
         if (deliveryRadius) restaurantExists.deliveryRadius = deliveryRadius
         if (phoneNo) restaurantExists.phoneNo = phoneNo
@@ -205,7 +207,7 @@ const getAllRestaurants = async  (req, res, next) => {
 
 const addMenuItem = async (req, res, next) => {
     try {
-        const {restName, label, name, cost, image, availability, addOns} = req.body
+        const {restName, label, name, cost, availability, addOns} = req.body
 
         const userId = req.user.userId
         const userExists = await user.findById(userId)
@@ -214,8 +216,17 @@ const addMenuItem = async (req, res, next) => {
         const restaurantExists = await restaurant.findOne({ verificationStatus: "verified", name: restName})
         if (!restaurantExists) return res.status(409).json({msg: "restaurant with this name is not registered"})    
 
-        const newMenuItem = await menuItem.create({ label, name, cost, image: safeParse(image, ""), availability: safeParse(availability, ""), addOns: safeParse(addOns, [])})
-        return res.status(201).json({msg: "menu-item added successfully", data: newMenuItem})
+        let imageURL = "";
+        if (req.file) {
+          const uploadResult = await uploadOnCloudinary(req.file.path);
+          if (uploadResult?.secure_url) {
+            imageURL = uploadResult.secure_url;
+          } else {
+            return res.status(500).json({ msg: "Image upload failed" });
+          }
+        }
+        const newMenuItem = await menuItem.create({ label, name, cost, image: imageURL, availability: safeParse(availability, ""), addOns: safeParse(addOns, [])})
+        return res.status(201).json({msg: "Menu item added successfully", data: newMenuItem})
 
     } catch (error) {
         next(error)

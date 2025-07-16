@@ -198,31 +198,31 @@ const getAllRestaurants = async  (req, res, next) => {
 
 
 const addMenuItem = async (req, res, next) => {
-    try {
-        const {restName, label, name, cost, availability, addOns} = req.body
+  try {
+      const {restName, label, name, cost, availability, addOns} = req.body
 
-        const userId = req.user.userId
-        const userExists = await user.findById(userId)
-        if(!userExists)  return res.status(404).json({ msg: "User not found" });
+      const userId = req.user.userId
+      const userExists = await user.findById(userId)
+      if(!userExists)  return res.status(404).json({ msg: "User not found" });
 
-        const restaurantExists = await restaurant.findOne({ verificationStatus: "verified", name: restName})
-        if (!restaurantExists) return res.status(409).json({msg: "restaurant with this name is not registered"})    
+      const restaurantExists = await restaurant.findOne({ verificationStatus: "verified", name: restName})
+      if (!restaurantExists) return res.status(409).json({msg: "restaurant with this name is not registered"})    
 
-        let imageURL = "";
-        if (req.file) {
-          const uploadResult = await uploadOnCloudinary(req.file.path);
-          if (uploadResult?.secure_url) {
-            imageURL = uploadResult.secure_url;
-          } else {
-            return res.status(500).json({ msg: "Image upload failed" });
-          }
+      let imageURL = "";
+      if (req.file) {
+        const uploadResult = await uploadOnCloudinary(req.file.path);
+        if (uploadResult?.secure_url) {
+          imageURL = uploadResult.secure_url;
+        } else {
+          return res.status(500).json({ msg: "Image upload failed" });
         }
-        const newMenuItem = await menuItem.create({ label, name, cost, image: imageURL, availability: safeParse(availability, ""), addOns: safeParse(addOns, [])})
-        return res.status(201).json({msg: "Menu item added successfully", data: newMenuItem})
+      }
+      const newMenuItem = await menuItem.create({ label, name, cost, image: imageURL, availability: safeParse(availability, ""), addOns: safeParse(addOns, [])})
+      return res.status(201).json({msg: "Menu item added successfully", data: newMenuItem})
 
-    } catch (error) {
-        next(error)
-    }
+  } catch (error) {
+      next(error)
+  }
 }
 
 const removeMenuItem = async (req, res, next) => {

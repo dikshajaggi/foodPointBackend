@@ -40,3 +40,15 @@ const limits = {
 
   // add pagination while fetching all restaurants
   // Use .select() to avoid fetching unnecessary fields (like verification docs). like .select("-verificationDetails") --> remove "verificationDetails"
+
+
+// user will place an order (place-order-api) ----> rest will be notified (orders will be filtered on the basis of rest and outlet)
+// user will be allowed to cancel the order within 10mins of placing  & change the address within 20mins of placing (different apis for both)
+
+// order payment (payment-api) (will have separate model)
+
+
+// we need cart apis also
+
+
+// either use middleware (pre('save')) or calculate in controller before saving.

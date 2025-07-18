@@ -52,3 +52,33 @@ const limits = {
 
 
 // either use middleware (pre('save')) or calculate in controller before saving.
+// functionality to upload all the menu-items data through a csv, along with the csv as well
+  -> steps:
+  Send a .csv file via a multipart/form-data POST request.
+  Use the multer middleware to accept the file.
+  Upload the CSV file using multer.
+  Use csv-parser to read the file.
+  Loop through the data rows and save to DB.
+
+
+
+fs.createReadStream(filePath).pipe(csv())
+“Take the CSV file you're reading, and pipe its contents into the csv() parser so each line becomes a JavaScript object.”
+
+
+fs.createReadStream() reads the file in chunks (efficient for large files).
+csv() is a transform stream that converts each chunk into parsed CSV rows.
+.pipe(csv()) connects these two streams.
+
+How .pipe() Works
+[Readable Stream] --> [Transform Stream] --> [Writable Stream]
+
+//uses -> read a csv and insert data into db
+-> compress a file
+-> serve a large file (like video)
+-> resize an image
+
+
+.on("data")
+.on("end")
+these are events

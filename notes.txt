@@ -43,7 +43,7 @@ const limits = {
 
 
 // user will place an order (place-order-api) ----> rest will be notified (orders will be filtered on the basis of rest and outlet)
-// user will be allowed to cancel the order within 10mins of placing  & change the address within 20mins of placing (different apis for both)
+// user will be allowed to cancel the order within 10mins of placing & change the address within 20mins of placing (different apis for both)
 
 // order payment (payment-api) (will have separate model)
 
@@ -82,3 +82,8 @@ How .pipe() Works
 .on("data")
 .on("end")
 these are events
+
+
+// socket.io for real time updates like   
+  -> updating the rest when user places an order
+  -> updating delivery guy when the order is to be picked up

@@ -38,18 +38,17 @@ const cartSchema = new mongoose.Schema({
     }
 }, { timestamps: true })
 
-const cart = new mongoose.model("cart", cartSchema)
 
 // middleware (pre('save')) to calculate total cost before saving
 
-cart.pre("save", function() {
+cartSchema.pre("save", function(next) {
     const cart = this
      if(!cart.isModified()) {
         return next()
     } else {
         try {
             const totalCost = cart.items.reduce((acc, curr) => {
-                acc + (curr.price * curr.qty)
+                return acc + (curr.price * curr.qty)
             } , 0)
             cart.totalCost = totalCost;
             next();
@@ -58,5 +57,6 @@ cart.pre("save", function() {
         }
     }
 })
+const cart = new mongoose.model("cart", cartSchema)
 
 module.exports = cart

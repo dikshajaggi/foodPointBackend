@@ -1,5 +1,60 @@
-const addItemToCart = async(req, res, next) => {
+const cart = require("../models/cart");
+const user = require("../models/user");
 
+const addItemToCart = async(req, res, next) => {
+   try {
+    const userId = req.user.userId
+    const {restId, name, price, qty, forceReplace, itemId} = req.body
+    const userExists = await user.findById(userId)
+    if(!userExists)  return res.status(404).json({ msg: "User not found" });
+
+    const existingCart = await cart.findOne({ user: userId });
+    const isSameRest = !existingCart || existingCart.restaurant.toString() === restId.toString();
+    
+    // different restaurant + force replace
+    if (!isSameRest && forceReplace && existingCart) {
+        existingCart.restaurant = restId;
+        existingCart.items = [{ name, price, qty }];
+        await existingCart.save();
+
+        return res.status(200).json({
+            msg: "Cart replaced with new restaurant item",
+            cart: existingCart
+        });
+    } 
+
+    // different restaurant without confirmation
+    if (!isSameRest && existingCart) {
+       return res.status(409).json({msg: "Your cart has items from another restaurant. Do you want to remove those and add these?"})
+    }
+
+    // no cart yet → create new one
+    if (!existingCart) {
+        const newCart = await cart.create({
+        user: userId,
+        restaurant: restId,
+        items: [{ name, price, qty }],
+      });
+      return res.status(201).json({ msg: "Item added to new cart", cart: newCart });
+    } else {
+        // same restaurant → append item
+        const existingItemIndex = existingCart.items.findIndex(item => item._id.toString() === itemId.toString());
+        
+        if (existingItemIndex > -1) {
+        // item already in cart → update qty
+        existingCart.items[existingItemIndex].qty += qty;
+        } else {
+        // item not in cart → add new
+        existingCart.items.push({ name, price, qty });
+        }
+
+        await existingCart.save();
+        return res.status(200).json({ msg: "Item added to cart", cart: existingCart });
+    }
+    
+   } catch (error) {
+    next(error)
+   }
 }
 
 const removeItemFromCart = async(req, res, next) => {
@@ -12,8 +67,5 @@ const clearCart = async(req, res, next) => {
 
 }
 
-const checkSingleRestaurant = async(req, res, next) => {
 
-}
-
-module.exports = {addItemToCart, removeItemFromCart, clearCart, checkSingleRestaurant}
+module.exports = {addItemToCart, removeItemFromCart, clearCart}

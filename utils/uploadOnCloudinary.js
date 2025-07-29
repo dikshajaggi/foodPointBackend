@@ -8,7 +8,6 @@ v2.config({
 });
 
 const uploadOnCloudinary = async (localFilePath) => {
-    console.log(localFilePath, "localFilePath")
     try {
         if(!localFilePath) return null
         //upload on cloudinary
@@ -16,7 +15,6 @@ const uploadOnCloudinary = async (localFilePath) => {
         // file has been uploaded successfully
         // Remove the file from local disk after successful upload
         fs.unlinkSync(localFilePath);
-        console.log(res, "file has been uploaded successfully", res.url)
         return res
     } catch (error) {
         if (fs.existsSync(localFilePath)) {

@@ -57,9 +57,6 @@ const RegisterRestaurant = async (req, res, next) => {
     }
 
     const files = req.files;
-
-    console.log(files, "files")
-
     const thumbnailFile = files?.thumbnail?.[0];
     const photoFile = files?.photo?.[0];
     const chequeFile = files?.cancelledCheque?.[0];

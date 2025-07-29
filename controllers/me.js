@@ -76,7 +76,6 @@ const deleteSingleAddress = async(req, res, next) => {
 const addAddress = async (req, res, next) => {
   try {
     const address = req.body
-    console.log(address, "addressaddress")
     const userId = req.user.userId;
 
     const userExists = await user.findById(userId)

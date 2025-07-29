@@ -57,7 +57,6 @@ const removeMenuItem = async (req, res, next) => {
 
 const bulkUploadMenuItems = async (req, res, next) => {
     try {
-        console.log(req.body, "checkkk")
         const {restName} = req.body
         
         const userId = req.user.userId
@@ -83,6 +82,8 @@ const bulkUploadMenuItems = async (req, res, next) => {
             });
         })
         // After reading all rows (on "end")
+        // Multer is needed when user is uploading the file
+        // When the file is present locally then multer is not required like in the case of a csv file
         .on("end", async () => {
             for (let item of items) {
                 // if there is a local image (From system) upload it on cloudinary

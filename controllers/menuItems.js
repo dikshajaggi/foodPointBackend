@@ -183,10 +183,6 @@ const showAllMenuItems = async (req, res, next) => {
         const restaurantExists = await restaurant.findOne({ verificationStatus: "verified", name: restName})
         if (!restaurantExists) return res.status(409).json({msg: "restaurant with this name is not registered"})
 
-        if (restaurantExists.owner.toString() !== userId.toString()) {  
-            return res.status(403).json({msg: "You are not the owner of this restaurant"})
-        }
-
         const items = await menuItem.find({ restaurant: restId }); 
          if (!items || items.length === 0) {
             return res.status(404).json({ msg: "No menu items found for this restaurant" });

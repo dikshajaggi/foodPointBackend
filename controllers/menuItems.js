@@ -6,6 +6,8 @@ const safeParse = require("../utils/safeParse");
 const fs = require("fs");
 const csvParser = require("csv-parser");
 
+//  match the rest is with the user connected and the signed in user then only add / remove / update
+
 const addMenuItem = async (req, res, next) => {
   try {
       const {restName, label, name, cost, availability, addOns} = req.body
@@ -26,7 +28,7 @@ const addMenuItem = async (req, res, next) => {
           return res.status(500).json({ msg: "Image upload failed" });
         }
       }
-      const newMenuItem = await menuItem.create({ label, name, cost, image: imageURL, availability: safeParse(availability, ""), addOns: safeParse(addOns, [])})
+      const newMenuItem = await menuItem.create({restaurant: restaurantExists._id, label, name, cost, image: imageURL, availability: safeParse(availability, ""), addOns: safeParse(addOns, [])})
       return res.status(201).json({msg: "Menu item added successfully", data: newMenuItem})
 
   } catch (error) {
@@ -36,7 +38,7 @@ const addMenuItem = async (req, res, next) => {
 
 const removeMenuItem = async (req, res, next) => {
     try {
-        const {restName, name} = req.body
+        const {restName, id} = req.body
 
         const userId = req.user.userId
         const userExists = await user.findById(userId)
@@ -45,7 +47,7 @@ const removeMenuItem = async (req, res, next) => {
         const restaurantExists = await restaurant.findOne({ verificationStatus: "verified", name: restName})
         if (!restaurantExists) return res.status(409).json({msg: "restaurant with this name is not registered"})    
 
-        const isRemoved = await menuItem.findOneAndDelete({name: name})
+        const isRemoved = await menuItem.findOneAndDelete({_id: id})
         if (isRemoved) return res.status(200).json({msg: "menu-item removed successfully"})
 
     } catch (error) {
@@ -53,8 +55,50 @@ const removeMenuItem = async (req, res, next) => {
     }
 }
 
-// bulk upload menu items through csv
 
+const updateMenuItems = async(req, res, next) => {
+    try {
+        const {restName, menuItemId, name, cost, availability, addOns} = req.body
+        const userId = req.user.userId
+        const userExists = await user.findById(userId)
+        if(!userExists)  return res.status(404).json({ msg: "User not found" });
+
+        const restaurantExists = await restaurant.findOne({ verificationStatus: "verified", name: restName})
+        if (!restaurantExists) return res.status(409).json({msg: "restaurant with this name is not registered"}) 
+
+        const menuItemExists = await menuItem.findById(menuItemId)
+        if (!menuItemExists) return res.status(409).json("Menu item not found")    
+        
+        if (req.file) {
+            const uploadResult = await uploadOnCloudinary(req.file.path);
+            if (uploadResult?.secure_url) {
+                const imageURL = uploadResult.secure_url;
+                menuItemExists.image = imageURL
+            } else {
+                return res.status(500).json({ msg: "Image upload failed" });
+            }
+        }
+
+        if (name) menuItemExists.name = name
+        if (cost) menuItemExists.cost = cost
+        if (availability) menuItemExists.availability = availability
+        if (addOns) {
+            try {
+                menuItemExists.addOns = typeof addOns === "string" ? JSON.parse(addOns) : addOns;
+            } catch (err) {
+                return res.status(400).json({ msg: "Invalid addOns format" });
+            }
+        }
+
+        await menuItemExists.save();
+        return res.status(200).json({ msg: "Menu item details updated successfully", data: menuItemExists });
+
+    } catch (error) {
+        next(error)
+    }
+}
+
+// bulk upload menu items through csv
 const bulkUploadMenuItems = async (req, res, next) => {
     try {
         const {restName} = req.body
@@ -113,4 +157,25 @@ const bulkUploadMenuItems = async (req, res, next) => {
     }
 }
 
-module.exports = {addMenuItem, removeMenuItem, bulkUploadMenuItems}
+const showAllMenuItems = async (req, res, next) => {
+    try {
+        const {restId, restName} = req.body
+        
+        const userId = req.user.userId
+        const userExists = await user.findById(userId)
+        if(!userExists)  return res.status(404).json({ msg: "User not found" });
+
+        const restaurantExists = await restaurant.findOne({ verificationStatus: "verified", name: restName})
+        if (!restaurantExists) return res.status(409).json({msg: "restaurant with this name is not registered"})
+
+        const items = await menuItem.find({ restaurant: restId }); 
+         if (!items || items.length === 0) {
+            return res.status(404).json({ msg: "No menu items found for this restaurant" });
+        }
+        res.status(200).json({ msg: "Menu items fetched successfully", data: items });  
+    } catch (error) {
+        next(error)
+    }
+}
+
+module.exports = {addMenuItem, removeMenuItem, updateMenuItems, bulkUploadMenuItems, showAllMenuItems}

@@ -57,7 +57,9 @@ const removeMenuItem = async (req, res, next) => {
 
 const bulkUploadMenuItems = async (req, res, next) => {
     try {
+        console.log(req.body, "checkkk")
         const {restName} = req.body
+        
         const userId = req.user.userId
         const userExists = await user.findById(userId)
         if(!userExists)  return res.status(404).json({ msg: "User not found" });
@@ -65,11 +67,10 @@ const bulkUploadMenuItems = async (req, res, next) => {
         const restaurantExists = await restaurant.findOne({ verificationStatus: "verified", name: restName})
         if (!restaurantExists) return res.status(409).json({msg: "restaurant with this name is not registered"})
         
-        const filePath = req.file.path;
+        const filePath = req.file.path
         const items = []; // to hold the menu-items
-
         fs.createReadStream(filePath) // Open the CSV file for reading (streaming)
-        .pipe(csvParser())  // Pipe the data through csv-parser (converts each row to JS object)
+        .pipe(csvParser())  // Pipe the data through csv-parser (converts each row to JS object) ---> pipe is used to convert readable stream (the csv file) to writable stream and here the csv-parser is acting as transform-stream both writable (this line) and readable (next line)
         .on("data", (row) => {
             items.push({
             restaurant: restaurantExists._id,
@@ -83,11 +84,29 @@ const bulkUploadMenuItems = async (req, res, next) => {
         })
         // After reading all rows (on "end")
         .on("end", async () => {
+            for (let item of items) {
+                // if there is a local image (From system) upload it on cloudinary
+                if (item.image && !item.image.startsWith("http")) {
+                    try {
+                        const cloudRes = await uploadOnCloudinary(item.image);
+                        item.image = cloudRes.url;
+                    } catch (err) {
+                        console.error("Cloudinary Upload Error:", err);
+                        item.image = ""; // fallback if failed
+                    }
+                } else if (!item.image) {
+                    item.image = "https://your-default-image-url.com/image.jpg";
+                }
+            }
             const inserted = await menuItem.insertMany(items); // Bulk insert all menu items
             fs.unlinkSync(filePath); // clean up -  // Delete the uploaded CSV file after success
             res.status(201).json({ msg: "Menu items uploaded", data: inserted });
-        });
-
+        })
+        .on("error", (err) => {
+                fs.unlinkSync(filePath);
+                console.error("CSV Read Error:", err);
+                res.status(500).json({ msg: "CSV Read failed" });
+            })
     } catch (error) {
         next(error)
     }

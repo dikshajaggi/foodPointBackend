@@ -12,3 +12,7 @@ Router.route("/bulk-upload-menu-items").post(getToken, csvUpload.single("file"),
 
 
 module.exports = Router
+
+// Multer doesn't allow multiple .single() calls in one middleware chain. Each one overwrites the previous req.file, so the second one (image) wins, and you lose the first (CSV).
+// Also, this prevents req.body from being populated correctly — and causes req.body to be undefined.
+

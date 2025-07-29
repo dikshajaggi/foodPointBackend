@@ -7,20 +7,28 @@ const addressSchema = require("./address");
 const userSchema = new mongoose.Schema({
     username: {
         type: String,
-        required: true
+        required: true,
+        minlength: [3, "Username must be at least 3 characters long"],
+        maxlength: [30, "Username cannot exceed 30 characters"]
     },
     email: {
         type: String,
-        required: true
+        required: true,
+        match: [
+            /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
+            "Please fill a valid email address"
+        ]
     },
     password: {
         type: String,
-        required: true
+        required: true,
+        minlength: [6, "Password must be at least 6 characters long"],
+        maxlength: [100, "Password cannot exceed 100 characters"]
     },
     phoneNo: {
         type: String, // string for phone numbers (avoid precision loss)
         required: true,
-        match: [/^\d{10,15}$/, "Invalid phone number"]
+        match: [/^\d{10}$/, "Phone number must be exactly 10 digits"]
     },
     address: {type: [addressSchema],
         validate: {

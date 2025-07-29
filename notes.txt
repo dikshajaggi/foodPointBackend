@@ -15,7 +15,7 @@ user should be able to add address under different labels like -> home, work, ot
 https://www.linkedin.com/pulse/system-design-architecture-food-delivery-app-like-durgesh-sharma-tdhec/
 
 
-// uploading images to cloudinary using multer
+(●'◡'●)uploading images to cloudinary using multer(●'◡'●)
 
 takes images from user using multer, 
 save them on local server (this is not mandatory but a good practice)
@@ -87,12 +87,18 @@ How .pipe() Works
 these are events
 
 
-// socket.io for real time updates like   
+socket.io for real time updates like   
   -> updating the rest when user places an order
   -> updating delivery guy when the order is to be picked up
 
 
+verify restaurant api to be made
 
-// verify restaurant api to be made
+how do no reply email works
 
-// how do no reply email works
+
+🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸
+
+to-do
+-> validate user detail fields (email, pass, name etc)
+-> validate rest detail fields

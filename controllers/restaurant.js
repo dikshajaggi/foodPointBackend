@@ -192,4 +192,50 @@ const getAllRestaurants = async  (req, res, next) => {
     }
 }
 
-module.exports = {RegisterRestaurant, updateRestaurant, getSpecificRestaurant, getAllRestaurants}
+const restaurantVerification = async (req, res, next) => {
+  // the admin will handle whether all the details for the rest are correct and should the rest be verified or not
+  // to the admin should be able to just change the verification prop of the restaurant (the admin can also discontinue the rest from serving)
+  try {
+    const {restName, status} = req.body 
+
+    const userId = req.user.userId
+    const userExists = await user.findById(userId)
+    if(!userExists)  return res.status(404).json({ msg: "User not found" });
+
+    const restaurantExists = await restaurant.findOne({ name: restName }) 
+    if (!restaurantExists) return res.status(409).json({msg: "restaurant with this name is not registered"})   
+
+    if (userExists.isAdmin) {
+      restaurantExists.verificationStatus = status
+      await restaurantExists.save()
+      if (status === "verified") {
+        res.status(200).json({msg: "restaurant verification completed successfully. check your registered mail for further details"})
+        // await sendVerificationEmail({
+        //   to: restaurantExists.verificationDetails.email,
+        //   type: "approved", 
+        //   restaurantName: restaurantExists.name,
+        // });
+      }
+      if (status === "discontinued") {
+        res.status(403).json({msg: "restaurant discontinued. check your registered mail for further details", data: status})
+        // await sendVerificationEmail({
+        //   to: restaurantExists.verificationDetails.email
+        //   type: "approved", 
+        //   restaurantName: restaurantExists.name,
+        // });
+      }
+      if (status === "rejected") {
+        res.status(403).json({msg: "restaurant verification rejected. check your registered mail for further details", data: status})
+        // await sendVerificationEmail({
+        //   to: restaurantExists.verificationDetails.email,
+        //   type: "approved", 
+        //   restaurantName: restaurantExists.name, 
+        // });
+      }
+    } return res.status(403).json({msg: "only admin is permitted to perform this operation", data: status})
+  } catch (error) {
+    next(error)
+  }
+}
+
+module.exports = {RegisterRestaurant, updateRestaurant, getSpecificRestaurant, getAllRestaurants, restaurantVerification}

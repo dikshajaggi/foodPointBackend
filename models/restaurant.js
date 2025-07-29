@@ -125,7 +125,7 @@ const restaurantSchema = new mongoose.Schema({
     },
     verificationStatus: {
         type: String,
-        enum: ["pending", "verified", "rejected"],
+        enum: ["pending", "verified", "rejected", "discontinued"],
         default: "pending"
     }
 

@@ -1,5 +1,5 @@
 const express = require("express")
-const { RegisterRestaurant, getSpecificRestaurant, getAllRestaurants, updateRestaurant } = require("../controllers/restaurant")
+const { RegisterRestaurant, getSpecificRestaurant, getAllRestaurants, updateRestaurant, restaurantVerification } = require("../controllers/restaurant")
 const imageUpload = require("../middlewares/imageUpload")
 const getToken = require("../middlewares/auth")
 
@@ -17,6 +17,6 @@ Router.route("/resgister-restaurant").post(getToken, imageUpload.fields([
 Router.route("/update-restaurant").patch(getToken, updateRestaurant)
 Router.route("/all-restaurants").get(getAllRestaurants)
 Router.route("/:name").get(getSpecificRestaurant)
-
+Router.route("/verify-restaurant").post(getToken, restaurantVerification)
 
 module.exports = Router

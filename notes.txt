@@ -1,10 +1,13 @@
+create flow of the whole resturant partner app / user app / admin panel and then decide what all apis are needed
+
+
 send data as form data and not in body ---> not required if using https
 add validations
 status codes and their respective messages
 rate limiting ---> to limit the number of login apis
 middleware to check token is present or not for authorization
 
-should we have same db for both rest partner app and user app??? -----> yes
+should we have same db for both rest partner app, admin panel and user app??? -----> yes
 
 user should be able to add address under different labels like -> home, work, other etc.
 
@@ -87,3 +90,9 @@ these are events
 // socket.io for real time updates like   
   -> updating the rest when user places an order
   -> updating delivery guy when the order is to be picked up
+
+
+
+// verify restaurant api to be made
+
+// how do no reply email works

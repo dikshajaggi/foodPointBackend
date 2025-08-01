@@ -12,6 +12,8 @@ const addNewCategory = async (req, res, next) => {
 
         if (!userExists) return res.status(404).json({ msg: "User not found" });
 
+        if(userExists.isAdmin === false) return res.status(404).json({msg: "only admin is allowed to add categories"})
+
         const categoryExists = await category.findOne({name: name})
         if (categoryExists) return res.status(409).json({msg: "category with this name already exists"})    
 
@@ -80,6 +82,17 @@ const updateCategory = async (req, res, next) => {
     }
 }
 
+const getAllCategories = async(req, res, next) => {
+    try {
+        const allCategories  = await category.find()
+        if (allCategories.length > 0 ) return res.status(200).json({msg: "all categories fetched successfully", data: allCategories})
+
+        return res.status(500).json({mg: "error fetching categories", data: []})
+    } catch (error) {
+        next(error)
+    }
+}
+
 
 const restaurantsByCategory = async (req, res, next) => {
     try {
@@ -101,4 +114,4 @@ const restaurantsByCategory = async (req, res, next) => {
 }
 
 
-module.exports = {addNewCategory, deleteCategory, updateCategory, restaurantsByCategory}
+module.exports = {addNewCategory, deleteCategory, updateCategory, getAllCategories, restaurantsByCategory}

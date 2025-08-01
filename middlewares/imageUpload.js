@@ -20,7 +20,7 @@ const fileFilter = (req, file, cb) => {
 };
 
 const limits = {
-    fileSize: 5 * 1024 * 1024, // Limit file size to 5 MB
+    // fileSize: 5 * 1024 * 1024, // Limit file size to 5 MB
     files: 3 // Limit number of files per request
   }
 

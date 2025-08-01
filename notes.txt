@@ -102,3 +102,9 @@ how do no reply email works
 to-do
 -> validate user detail fields (email, pass, name etc)
 -> validate rest detail fields
+
+
+-> search bar api-> recently search (4 items/ restaurants)
+
+
+-> give cuisine options when user fills in the cuisines (as per the categories give options and allow the user to choose from those options)

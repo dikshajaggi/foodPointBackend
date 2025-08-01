@@ -130,8 +130,8 @@ const restaurantSchema = new mongoose.Schema({
         match: [/^\d{10}$/, "Phone number must be exactly 10 digits"]
     },
     thumbnail: {
-        type: String
-        // default: "default-img-url"
+        type: String,
+        default: "default-img-url"
     },
     costForTwo: {
         type: Number,

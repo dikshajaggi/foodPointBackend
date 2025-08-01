@@ -14,7 +14,7 @@ const orderRoutes = require("./routes/order")
 const restaurantRoutes = require("./routes/restaurant")
 const menuRoutes = require("./routes/menuItems")
 const cartRoutes = require("./routes/cart")
-
+const categoryRoutes = require("./routes/category")
 
 // middlewares 
 app.use(cors({origin: "http://localhost:1010/"}))
@@ -29,6 +29,7 @@ app.use("/api/orders", orderRoutes)
 app.use("/api/restaurant", restaurantRoutes)
 app.use("/api/menuItems", menuRoutes)
 app.use("/api/cart", cartRoutes)
+app.use("/api/category", categoryRoutes)
 
 // first connect database and then start the server
 connectDb().then(() => {

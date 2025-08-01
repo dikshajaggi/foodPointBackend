@@ -22,8 +22,7 @@ const RegisterRestaurant = async (req, res, next) => {
     const userId = req.user.userId;
     const userExists = await user.findById(userId);
 
-    if (!userExists)
-      return res.status(404).json({ msg: "User not found" });
+    if (!userExists) return res.status(404).json({ msg: "User not found" });
 
     if (!userExists.isRestaurantOwner) {
       return res.status(401).json({
@@ -163,6 +162,7 @@ const updateRestaurant = async  (req, res, next) => {
 
 const getSpecificRestaurant = async  (req, res, next) => {
     try {
+        const {name} = req.params
         const restaurantExists = await restaurant.findOne({name: name})
         if (!restaurantExists) return res.status(409).json({msg: "restaurant with this name is not registered"})    
         return res.status(200).json({msg: "restaurant details fetched successfully", data: restaurantExists})
@@ -238,4 +238,25 @@ const restaurantVerification = async (req, res, next) => {
   }
 }
 
-module.exports = {RegisterRestaurant, updateRestaurant, getSpecificRestaurant, getAllRestaurants, restaurantVerification}
+const deleteRestaurant = async (req, res, next) => {
+    try {
+
+        const {id} = req.params
+        const userId = req.user.userId
+        const userExists = user.findById(userId)
+
+        if (!userExists) return res.status(404).json({ msg: "User not found" });
+
+        const restaurantExists = await restaurant.findById({ _id: id }) 
+        if (!restaurantExists) return res.status(409).json({msg: "restaurant with this name doesn't exist"})    
+
+        await restaurant.findOneAndDelete({_id: id})
+        
+        return res.status(200).json({ msg: "Restaurant deleted successfully"});
+
+    } catch (error) {
+        next(error)
+    }
+}
+
+module.exports = {RegisterRestaurant, updateRestaurant, getSpecificRestaurant, getAllRestaurants, restaurantVerification, deleteRestaurant}

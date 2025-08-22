@@ -20,15 +20,6 @@ const RegisterRestaurant = async (req, res, next) => {
 
   try {
     const userId = req.user.userId;
-    const userExists = await user.findById(userId);
-
-    if (!userExists) return res.status(404).json({ msg: "User not found" });
-
-    if (!userExists.isRestaurantOwner) {
-      return res.status(401).json({
-        msg: "User is not a restaurant partner. Contact support team",
-      });
-    }
 
     const alreadyRegistered = await restaurant.findOne({ owner: userId });
     if (alreadyRegistered)
@@ -60,11 +51,15 @@ const RegisterRestaurant = async (req, res, next) => {
     const photoFile = files?.photo?.[0];
     const chequeFile = files?.cancelledCheque?.[0];
 
+    let thumbnailUrl = "";
+    let photoUrl = "";
+    let chequeUrl = "";
+
     // Upload all files to Cloudinary
     if (thumbnailFile) {
-      const res = await uploadOnCloudinary(thumbnailFile.path);
-      if (!res?.secure_url) return res.status(500).json({ msg: "Thumbnail upload failed" });
-      thumbnailUrl = res.secure_url;
+      const uploadResult = await uploadOnCloudinary(thumbnailFile.path);
+      if (!uploadResult?.secure_url) return res.status(500).json({ msg: "Thumbnail upload failed" });
+      thumbnailUrl = uploadResult.secure_url;
     }
 
     // Upload photo
@@ -124,12 +119,10 @@ const RegisterRestaurant = async (req, res, next) => {
 const updateRestaurant = async  (req, res, next) => {
     try {
         const {name, address, deliveryRadius, phoneNo, costForTwo, etd, isAvailable, deliveryChargeRules, cuisines, tags, replaceCuisines, replaceTags} = req.body
-        const userId = req.user.userId
-        const userExists = await user.findById(userId)
-        if(!userExists)  return res.status(404).json({ msg: "User not found" });
 
-        const restaurantExists = await restaurant.findOne({ name: name })
-        if (!restaurantExists) return res.status(409).json({ msg: "restaurant with this name is not registered" })    
+        //But what if the owner wants to update the name itself? You’ll never find it. So don't find by name.
+        const restaurantExists = await restaurant.findOne({owner: req.user.userId })
+        if (!restaurantExists)  return res.status(404).json({msg: "Restaurant not found"}) 
         if (address) restaurantExists.address = address
         if (deliveryRadius) restaurantExists.deliveryRadius = deliveryRadius
         if (phoneNo) restaurantExists.phoneNo = phoneNo
@@ -139,7 +132,7 @@ const updateRestaurant = async  (req, res, next) => {
         if (deliveryChargeRules) restaurantExists.deliveryChargeRules = deliveryChargeRules
         if (cuisines) {
             if (replaceCuisines) {
-                restaurantExists.cuisines = cuisines;
+                restaurantExists.cuisines =  [...new Set([...restaurantExists.cuisines, ...cuisines])]
             } else {
                 restaurantExists.cuisines.push(...cuisines);
             }
@@ -164,7 +157,7 @@ const getSpecificRestaurant = async  (req, res, next) => {
     try {
         const {name} = req.params
         const restaurantExists = await restaurant.findOne({name: name})
-        if (!restaurantExists) return res.status(409).json({msg: "restaurant with this name is not registered"})    
+        if (!restaurantExists)  return res.status(404).json({msg: "Restaurant not found"})  
         return res.status(200).json({msg: "restaurant details fetched successfully", data: restaurantExists})
         } catch (error) {
             next(error)
@@ -173,19 +166,33 @@ const getSpecificRestaurant = async  (req, res, next) => {
 
 const getAllRestaurants = async  (req, res, next) => {
     try {
+
+      const {lastId, pageLimit} = req.body
+      const limit = parseInt(pageLimit) || 10;
+
+      const query = lastId
+      ? { isAvailable: true, verificationStatus: "verified", _id: { $gt: lastId } }
+      : { isAvailable: true, verificationStatus: "verified" };
+
         const restaurants = await restaurant
-        .find({ isAvailable: true, verificationStatus: "verified" })
+        .find(query)
+        .sort({ _id: 1 })
+        .limit(limit)
         .select("-verificationDetails");
+
+        const newLastId = restaurants.length ? restaurants[restaurants.length - 1]._id : null;
 
         if (restaurants.length === 0) {
             return res.status(200).json({
                 msg: "No verified and available restaurants found",
-                data: []
+                data: [],
+                nextcursor: null
             });
         }
         return res.status(200).json({
             msg: "Restaurants fetched successfully",
-            data: restaurants
+            data: restaurants,
+            nextcursor: newLastId
         });
         } catch (error) {
             next(error)
@@ -197,42 +204,40 @@ const restaurantVerification = async (req, res, next) => {
   // to the admin should be able to just change the verification prop of the restaurant (the admin can also discontinue the rest from serving)
   try {
     const {restName, status} = req.body 
-
-    const userId = req.user.userId
-    const userExists = await user.findById(userId)
-    if(!userExists)  return res.status(404).json({ msg: "User not found" });
-
     const restaurantExists = await restaurant.findOne({ name: restName }) 
-    if (!restaurantExists) return res.status(409).json({msg: "restaurant with this name is not registered"})   
+    if (!restaurantExists) return res.status(404).json({msg: "Restaurant not found"}) 
 
-    if (userExists.isAdmin) {
-      restaurantExists.verificationStatus = status
-      await restaurantExists.save()
-      if (status === "verified") {
-        res.status(200).json({msg: "restaurant verification completed successfully. check your registered mail for further details"})
-        // await sendVerificationEmail({
-        //   to: restaurantExists.verificationDetails.email,
-        //   type: "approved", 
-        //   restaurantName: restaurantExists.name,
-        // });
-      }
-      if (status === "discontinued") {
-        res.status(403).json({msg: "restaurant discontinued. check your registered mail for further details", data: status})
-        // await sendVerificationEmail({
-        //   to: restaurantExists.verificationDetails.email
-        //   type: "approved", 
-        //   restaurantName: restaurantExists.name,
-        // });
-      }
-      if (status === "rejected") {
-        res.status(403).json({msg: "restaurant verification rejected. check your registered mail for further details", data: status})
-        // await sendVerificationEmail({
-        //   to: restaurantExists.verificationDetails.email,
-        //   type: "approved", 
-        //   restaurantName: restaurantExists.name, 
-        // });
-      }
-    } return res.status(403).json({msg: "only admin is permitted to perform this operation", data: status})
+    // putting status directly => means a bad client could send status: "anything" and it would bypass enum rules in schema.So check everything.
+    const allowedStatuses = ["pending", "verified", "rejected", "discontinued"];
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({ msg: "Invalid verification status" });
+    }
+    restaurantExists.verificationStatus = status
+    await restaurantExists.save()
+    if (status === "verified") {
+      res.status(200).json({msg: "restaurant verification completed successfully. check your registered mail for further details"})
+      // await sendVerificationEmail({
+      //   to: restaurantExists.verificationDetails.email,
+      //   type: "approved", 
+      //   restaurantName: restaurantExists.name,
+      // });
+    }
+    if (status === "discontinued") {
+      res.status(403).json({msg: "restaurant discontinued. check your registered mail for further details", data: status})
+      // await sendVerificationEmail({
+      //   to: restaurantExists.verificationDetails.email
+      //   type: "approved", 
+      //   restaurantName: restaurantExists.name,
+      // });
+    }
+    if (status === "rejected") {
+      res.status(403).json({msg: "restaurant verification rejected. check your registered mail for further details", data: status})
+      // await sendVerificationEmail({
+      //   to: restaurantExists.verificationDetails.email,
+      //   type: "approved", 
+      //   restaurantName: restaurantExists.name, 
+      // });
+    }
   } catch (error) {
     next(error)
   }
@@ -242,10 +247,6 @@ const deleteRestaurant = async (req, res, next) => {
     try {
 
         const {id} = req.params
-        const userId = req.user.userId
-        const userExists = user.findById(userId)
-
-        if (!userExists) return res.status(404).json({ msg: "User not found" });
 
         const restaurantExists = await restaurant.findById({ _id: id }) 
         if (!restaurantExists) return res.status(409).json({msg: "restaurant with this name doesn't exist"})    

@@ -3,14 +3,15 @@ const { removeMenuItem, addMenuItem, bulkUploadMenuItems, updateMenuItems, showA
 const getToken = require("../middlewares/auth")
 const imageUpload = require("../middlewares/imageUpload")
 const csvUpload = require("../middlewares/csvUpload")
+const isRestOwner = require("../middlewares/isRestOwner");
 
 const Router = express.Router()
 
-Router.route("/add-menu-item").post(getToken, imageUpload.single("image"), addMenuItem)
-Router.route("/remove-menu-item").delete(getToken, removeMenuItem)
-Router.route("/update-menu-item").patch(getToken, imageUpload.single("image"), updateMenuItems)
-Router.route("/all-menu-items").get(getToken, showAllMenuItems)
-Router.route("/bulk-upload-menu-items").post(getToken, csvUpload.single("file"), bulkUploadMenuItems)
+Router.route("/add").post(getToken, isRestOwner, imageUpload.single("image"), addMenuItem)
+Router.route("/remove").delete(getToken, isRestOwner, removeMenuItem)
+Router.route("/update").patch(getToken, isRestOwner, imageUpload.single("image"), updateMenuItems)
+Router.route("/all").get(getToken, showAllMenuItems)
+Router.route("/bulk-upload").post(getToken, isRestOwner, csvUpload.single("file"), bulkUploadMenuItems)
 
 
 module.exports = Router

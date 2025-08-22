@@ -34,7 +34,13 @@ const cartSchema = new mongoose.Schema({
     totalCost: {
         type: Number,
         required: true,
-        default: 0
+        default: 0,
+        validate: {
+            validator: function (value) {
+                return typeof value === "number" && !isNaN(value)
+            },
+            message: "totalCost must be a Number"
+        }
     }
 }, { timestamps: true })
 

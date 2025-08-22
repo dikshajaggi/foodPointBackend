@@ -14,28 +14,20 @@ const addMenuItem = async (req, res, next) => {
   try {
       const {restName, label, name, cost, availability, addOns} = req.body
 
-      const userId = req.user.userId
-      const userExists = await user.findById(userId)
-      if(!userExists)  return res.status(404).json({ msg: "User not found" });
-
       const restaurantExists = await restaurant.findOne({ verificationStatus: "verified", name: restName})
       if (!restaurantExists) return res.status(409).json({msg: "restaurant with this name is not registered"})    
 
-        if (restaurantExists.owner.toString() === userId.toString()) {
-            let imageURL = "";
-            if (req.file) {
-                const uploadResult = await uploadOnCloudinary(req.file.path);
-                if (uploadResult?.secure_url) {
-                imageURL = uploadResult.secure_url;
-                } else {
-                return res.status(500).json({ msg: "Image upload failed" });
-                }
+        let imageURL = "";
+        if (req.file) {
+            const uploadResult = await uploadOnCloudinary(req.file.path);
+            if (uploadResult?.secure_url) {
+            imageURL = uploadResult.secure_url;
+            } else {
+            return res.status(500).json({ msg: "Image upload failed" });
             }
-            const newMenuItem = await menuItem.create({restaurant: restaurantExists._id, label, name, cost, image: imageURL, availability: safeParse(availability, ""), addOns: safeParse(addOns, [])})
-            return res.status(201).json({msg: "Menu item added successfully", data: newMenuItem})
-        } else  {
-            return res.status(403).json({msg: "You are not the owner of this restaurant"})
         }
+        const newMenuItem = await menuItem.create({restaurant: restaurantExists._id, label, name, cost, image: imageURL, availability: safeParse(availability, ""), addOns: safeParse(addOns, [])})
+        return res.status(201).json({msg: "Menu item added successfully", data: newMenuItem})
   } catch (error) {
       next(error)
   }
@@ -45,19 +37,11 @@ const removeMenuItem = async (req, res, next) => {
     try {
         const {restName, id} = req.body
 
-        const userId = req.user.userId
-        const userExists = await user.findById(userId)
-        if(!userExists)  return res.status(404).json({ msg: "User not found" });
-
         const restaurantExists = await restaurant.findOne({ verificationStatus: "verified", name: restName})
-        if (!restaurantExists) return res.status(409).json({msg: "restaurant with this name is not registered"})    
+        if (!restaurantExists)  return res.status(404).json({msg: "Restaurant not found"}) 
 
-        if (restaurantExists.owner.toString() === userId.toString()) {
-            const isRemoved = await menuItem.findOneAndDelete({_id: id})
-            if (isRemoved) return res.status(200).json({msg: "menu-item removed successfully"})
-        } else {
-            return res.status(403).json({msg: "You are not the owner of this restaurant"})
-        }
+        const isRemoved = await menuItem.findOneAndDelete({_id: id})
+        if (isRemoved) return res.status(200).json({msg: "menu-item removed successfully"})
     } catch (error) {
         next(error)
     }
@@ -67,19 +51,12 @@ const removeMenuItem = async (req, res, next) => {
 const updateMenuItems = async(req, res, next) => {
     try {
         const {restName, menuItemId, name, cost, availability, addOns} = req.body
-        const userId = req.user.userId
-        const userExists = await user.findById(userId)
-        if(!userExists)  return res.status(404).json({ msg: "User not found" });
 
         const restaurantExists = await restaurant.findOne({ verificationStatus: "verified", name: restName})
-        if (!restaurantExists) return res.status(409).json({msg: "restaurant with this name is not registered"}) 
-
-        if (restaurantExists.owner.toString() !== userId.toString()) {  
-            return res.status(403).json({msg: "You are not the owner of this restaurant"})
-        }
+        if (!restaurantExists)  return res.status(404).json({msg: "Restaurant not found"}) 
 
         const menuItemExists = await menuItem.findById(menuItemId)
-        if (!menuItemExists) return res.status(409).json("Menu item not found")    
+        if (!menuItemExists) return res.status(404).json("Menu item not found")    
         
         if (req.file) {
             const uploadResult = await uploadOnCloudinary(req.file.path);
@@ -113,18 +90,10 @@ const updateMenuItems = async(req, res, next) => {
 const bulkUploadMenuItems = async (req, res, next) => {
     try {
         const {restName} = req.body
-        
-        const userId = req.user.userId
-        const userExists = await user.findById(userId)
-        if(!userExists)  return res.status(404).json({ msg: "User not found" });
 
         const restaurantExists = await restaurant.findOne({ verificationStatus: "verified", name: restName})
-        if (!restaurantExists) return res.status(409).json({msg: "restaurant with this name is not registered"})
-        
-        if (restaurantExists.owner.toString() !== userId.toString()) {  
-            return res.status(403).json({msg: "You are not the owner of this restaurant"})
-        }
-
+        if (!restaurantExists)  return res.status(404).json({msg: "Restaurant not found"}) 
+       
         const filePath = req.file.path
         const items = []; // to hold the menu-items
         fs.createReadStream(filePath) // Open the CSV file for reading (streaming)
@@ -174,20 +143,27 @@ const bulkUploadMenuItems = async (req, res, next) => {
 
 const showAllMenuItems = async (req, res, next) => {
     try {
-        const {restId, restName} = req.body
+        const {restId, restName, pageLimit, lastId} = req.body
         
-        const userId = req.user.userId
-        const userExists = await user.findById(userId)
-        if(!userExists)  return res.status(404).json({ msg: "User not found" });
+        const limit = parseInt(pageLimit) || 10;
 
         const restaurantExists = await restaurant.findOne({ verificationStatus: "verified", name: restName})
-        if (!restaurantExists) return res.status(409).json({msg: "restaurant with this name is not registered"})
+        if (!restaurantExists) return res.status(404).json({msg: "Restaurant not found"}) 
 
-        const items = await menuItem.find({ restaurant: restId }); 
+        const query = lastId
+            ? { restaurant: restId, _id: { $gt: lastId } }
+            : { restaurant: restId };
+
+
+        const items = await menuItem.find(query).sort({ _id: 1 }).limit(limit); 
+
+        const newLastId = items.length ? items[items.length - 1]._id : null;
+
          if (!items || items.length === 0) {
-            return res.status(404).json({ msg: "No menu items found for this restaurant" });
+            return res.status(200).json({ msg: "No more menu items", data: [], nextCursor: null });
         }
-        res.status(200).json({ msg: "Menu items fetched successfully", data: items });  
+        
+        res.status(200).json({ msg: "Menu items fetched successfully", data: items, nextcursor: newLastId });  
     } catch (error) {
         next(error)
     }

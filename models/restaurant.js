@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const addressSchema = new mongoose.Schema({
     building: { 
         type: String,
-        maxlength: [10, "Building name/number cannot exceed 50 characters"]
+        maxlength: [10, "Building name/number cannot exceed 10 characters"]
     },
     street: { 
         type: String,
@@ -148,7 +148,13 @@ const restaurantSchema = new mongoose.Schema({
     isAvailable: {
         type: Boolean,
         default: true,
-        required: true
+        required: true,
+        validate: {
+            validator: function (value) {
+                return typeof value === "boolean"
+            },
+            message: "isAvailable must be a boolean"
+        }
     },
     deliveryChargeRules: {
         freeDeliveryUptoKm: {
@@ -190,6 +196,19 @@ const restaurantSchema = new mongoose.Schema({
     }
 
 }, {timestamps: true})
+
+// This speeds up queries like search by name, filter by city, show only verified+available restaurants (common in Swiggy-like apps).
+restaurantSchema.index({ name: 1 }, { unique: true });
+restaurantSchema.index({ cuisines: 1 });
+restaurantSchema.index({ "address.city": 1 });
+restaurantSchema.index({ isAvailable: 1, verificationStatus: 1 });
+restaurantSchema.index({ name: "text", cuisines: "text", tags: "text" });
+
+restaurantSchema.pre("save", function(next) {
+  if (this.cuisines) this.cuisines = this.cuisines.map(c => c.toLowerCase());
+  if (this.tags) this.tags = this.tags.map(t => t.toLowerCase());
+  next();
+});
 
 const restaurant = new mongoose.model("restaurant", restaurantSchema)
 module.exports = restaurant

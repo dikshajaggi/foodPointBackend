@@ -17,7 +17,7 @@ const cartRoutes = require("./routes/cart")
 const categoryRoutes = require("./routes/category")
 
 // middlewares 
-app.use(cors({origin: "http://localhost:1010/"}))
+app.use(cors({origin: "http://localhost:5173"}))
 app.use(express.json()) // understand and process JSON data sent by clients in the request body
 app.use(express.urlencoded({ extended: true })); // dealing with data submitted through HTML forms, particularly using the application/x-www-form-urlencoded content type
 app.use(helmet()) // secure headers

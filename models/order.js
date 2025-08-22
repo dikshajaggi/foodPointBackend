@@ -15,8 +15,8 @@ const orderSchema = new mongoose.Schema({
     items : [
         {
             menuItem: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "menuItem"
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "menuItem"
             },
             quantity: Number,
             price: Number 
@@ -24,7 +24,12 @@ const orderSchema = new mongoose.Schema({
     ],
     totalAmount: {
         type: Number,
-        required: true
+        required: true,
+        validate: {
+            validator :  function (value) {
+                return typeof value === 'number' && !isNaN(value)
+            }
+        }
     },
     deliveryAddress: {type: [addressSchema],
         validate: {

@@ -4,6 +4,31 @@ const jwt = require("jsonwebtoken");
 const address = require("./address");
 const addressSchema = require("./address");
 
+// Normally in Mongoose, if you want to reference another collection, you write:
+// itemId: { type: mongoose.Schema.Types.ObjectId, ref: "restaurant" }
+// This means itemId is always pointing to a restaurant document.
+// But in your case, a recent search could be either: restaurant OR a menuItem
+// So we can’t hardcode ref: "restaurant" or ref: "menuItem".
+// That’s where refPath comes in.
+
+const recentSearchSchema = new mongoose.Schema({
+    type: {
+        type: String,
+        enum: ["restaurant", "menuItem"],
+        required: true
+    },
+    itemId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        refPath: "recentSearches.type"  //refPath lets Mongoose decide dynamically which model to reference, based on another field in the same schema.
+    },
+    name: {
+        type: String,
+        required: true
+    },
+    searchedAt: { type: Date, default: Date.now }
+}, { timestamps: true });
+
 const userSchema = new mongoose.Schema({
     username: {
         type: String,
@@ -14,6 +39,7 @@ const userSchema = new mongoose.Schema({
     email: {
         type: String,
         required: true,
+        unique: [true, 'email already exists'],
         match: [
             /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
             "Please fill a valid email address"
@@ -28,6 +54,7 @@ const userSchema = new mongoose.Schema({
     phoneNo: {
         type: String, // string for phone numbers (avoid precision loss)
         required: true,
+        unique: [true, 'phoneNo already exists'],
         match: [/^\d{10}$/, "Phone number must be exactly 10 digits"]
     },
     address: {type: [addressSchema],
@@ -40,16 +67,39 @@ const userSchema = new mongoose.Schema({
     },
     isAdmin: {
         type: Boolean,
-        default: false
+        default: false,
+        validate: {
+            validator: function (value){
+                return typeof value === 'boolean'
+            },
+            message: "isAdmin must be a boolean"
+        } 
     },
     isRestaurantOwner: {
         type: Boolean,
-        default: false
+        default: false,
+        validate: {
+            validator: function (value) {
+                return typeof value === "boolean"
+            },
+            message: "isRestaurantOwner must be a boolean"
+        }
     },
     isDeliveryGuy: {
         type: Boolean,
-        default: false
+        default: false,
+        validate: {
+            validator: function (value) {
+                return typeof value === "boolean"
+            },
+            message: "isDeliveryGuy must be a boolean"
+        }
+    },
+    recentSearches: {
+        type: [recentSearchSchema],
+        default: []
     }
+
 }, { timestamps: true })
 
 userSchema.pre("save", async function() {

@@ -47,7 +47,13 @@ const offersSchema = new mongoose.Schema({
 
     isActive: {
         type: Boolean,
-        default: true
+        default: true,
+        validate: {
+            validator: function (value) {
+                return typeof value === 'boolean'
+            },
+            message: "isActive must be a boolean"
+        }
     }
 })
 

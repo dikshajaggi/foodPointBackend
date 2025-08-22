@@ -1,9 +1,11 @@
 const mongoose = require("mongoose");
 
 const categorySchema = new mongoose.Schema({
-    name: { 
+   name: { 
         type: String, 
-        required: true 
+        required: true, 
+        unique: true, 
+        trim: true 
     },
     image: { 
         type: String, 
@@ -11,7 +13,13 @@ const categorySchema = new mongoose.Schema({
     },
     isNew: {
         type: Boolean,
-        default: false
+        default: false,
+        validate: {
+            validator: function (value) {
+                return typeof value === "boolean"
+            },
+            message: "isNew must be a boolean"
+        }
     }
 
 })

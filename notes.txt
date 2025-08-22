@@ -108,3 +108,19 @@ to-do
 
 
 -> give cuisine options when user fills in the cuisines (as per the categories give options and allow the user to choose from those options)
+
+https://github.com/goldbergyoni/nodebestpractices
+
+
+🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸
+
+https://www.behance.net/gallery/84395097/Swiggy-Partner-Redesign-Concept-(UXUX-Design)
+https://www.behance.net/gallery/101024287/Swiggy-Merchent-App-Concept-design?tracking_source=search_projects|Swiggy+app+restaurant&l=1
+https://www.behance.net/gallery/139913269/HomeChef-Kitchen-Partner-App?tracking_source=search_projects|vendor+dashboard+restaurant+partner+app&l=0
+https://www.behance.net/gallery/142965493/Zomato-Restaurant-Partner-App
+
+
+Cursor-Based Pagination (Recommended for Large Data)
+Instead of skip, which can get slow for huge collections, we can use “last seen _id” or timestamp to paginate.
+Example: Get 10 restaurants after _id = "64fa1a..."
+This is how big apps like Swiggy/Zomato scale.

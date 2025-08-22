@@ -7,12 +7,6 @@ const addNewCategory = async (req, res, next) => {
     try {
         const {name, isNew} = req.body
         const image = req?.file
-        const userId = req.user.userId
-        const userExists = await user.findById(userId)
-
-        if (!userExists) return res.status(404).json({ msg: "User not found" });
-
-        if(userExists.isAdmin === false) return res.status(404).json({msg: "only admin is allowed to add categories"})
 
         const categoryExists = await category.findOne({name: name})
         if (categoryExists) return res.status(409).json({msg: "category with this name already exists"})    
@@ -21,7 +15,7 @@ const addNewCategory = async (req, res, next) => {
 
         if(image) {
             const resImage = await uploadOnCloudinary(image.path);
-            if (!resImage?.secure_url) return resImage.status(500).json({ msg: "Image upload failed" });
+            if (!resImage?.secure_url) return res.status(500).json({ msg: "Image upload failed" });
             imageUrl = resImage.secure_url;
         }
 
@@ -35,17 +29,12 @@ const addNewCategory = async (req, res, next) => {
 const deleteCategory = async (req, res, next) => {
     try {
         const {id} = req.params
-        const userId = req.user.userId
-        const userExists = await user.findById(userId)
+        const categoryExists = await category.findById(id)
+        if (!categoryExists) return res.status(404).json({msg: "category with this name doesn't exist"})    
 
-        if (!userExists) return res.status(404).json({ msg: "User not found" });
-
-        const categoryExists = await category.findOne({name: name})
-        if (!categoryExists) return res.status(409).json({msg: "category with this name doesn't exist"})    
-
-        await category.findOneAndDelete({_id: id})
+        await category.findByIdAndDelete(id)
         
-        return res.status(200).json({ msg: "Category deleted successfully"});
+        return res.status(200).json({success: true, msg: "Category deleted successfully"});
     } catch (error) {
         next(error)
     }
@@ -54,12 +43,9 @@ const deleteCategory = async (req, res, next) => {
 const updateCategory = async (req, res, next) => {
     try {
         const {name, isNew} = req.body
-        const userId = req.user.userId
-        const userExists = await user.findById(userId)
+        const {id} = req.params
 
-        if (!userExists) return res.status(404).json({ msg: "User not found" });
-
-        const categoryExists = await category.findOne({name: name})
+        const categoryExists = await category.findById(id)
         if (!categoryExists) return res.status(409).json({msg: "category with this name doesn't exist"})  
             
         const image = req?.file
@@ -76,7 +62,7 @@ const updateCategory = async (req, res, next) => {
         if(typeof isNew !== "undefined") categoryExists.isNew = isNew
 
         await categoryExists.save()
-        return res.status(200).json({ msg: "Category updated successfully", data: categoryExists });
+        return res.status(200).json({success: true, msg: "Category updated successfully", data: categoryExists });
     } catch (error) {
         next(error)
     }
@@ -87,7 +73,7 @@ const getAllCategories = async(req, res, next) => {
         const allCategories  = await category.find()
         if (allCategories.length > 0 ) return res.status(200).json({msg: "all categories fetched successfully", data: allCategories})
 
-        return res.status(500).json({mg: "error fetching categories", data: []})
+        // return res.status(500).json({mg: "error fetching categories", data: []})
     } catch (error) {
         next(error)
     }
@@ -97,17 +83,13 @@ const getAllCategories = async(req, res, next) => {
 const restaurantsByCategory = async (req, res, next) => {
     try {
         const {cuisine} = req.params
-        const userId = req.user.userId
-        const userExists = await user.findById(userId)
-
-        if (!userExists) return res.status(404).json({ msg: "User not found" });
 
         const categoryExists = await category.findOne({name: cuisine})
-        if (!categoryExists) return res.status(409).json({msg: "category with this name doesn't exist"})  
+        // if (!categoryExists) return res.status(409).json({msg: "category with this name doesn't exist"})  
         
-        const matchedRests = await restaurant.find({cuisines: {$in : [cuisine]}}) // matches if cuisine exists in cuisines array
+        const matchedRests = await restaurant.find({cuisines: {$in : [cuisine.toLowerCase()]}}) // matches if cuisine exists in cuisines array
 
-        return res.status(200).json({data: matchedRests})
+        return res.status(200).json({success: true, data: matchedRests})
     } catch (error) {
         next(error)
     }

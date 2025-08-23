@@ -59,12 +59,12 @@ const userSchema = new mongoose.Schema({
     },
     address: {type: [addressSchema],
         validate: {
-        validator: function (value) {
-            return value && value.length > 0;
-            },
-            message: "At least one address is required"
-        }
-    },
+        validator: function (addresses) {
+            const labels = addresses.map(addr => addr.label);
+            return labels.length === new Set(labels).size; // no duplicates
+        },
+        message: "Duplicate address labels are not allowed"
+    }},
     isAdmin: {
         type: Boolean,
         default: false,
@@ -105,9 +105,8 @@ const userSchema = new mongoose.Schema({
 userSchema.pre("save", async function() {
     const user = this
 
-    if(!user.isModified) {
-        next()
-    } else {
+    if (!user.isModified("password")) return next();
+    else {
         try {
             const salt = await bcrypt.genSaltSync(10);
             const hash = await bcrypt.hashSync(user.password, salt);

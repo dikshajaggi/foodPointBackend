@@ -5,7 +5,8 @@ const categorySchema = new mongoose.Schema({
         type: String, 
         required: true, 
         unique: true, 
-        trim: true 
+        trim: true,
+        lowercase: true
     },
     image: { 
         type: String, 
@@ -22,7 +23,7 @@ const categorySchema = new mongoose.Schema({
         }
     }
 
-})
+}, { timestamps: true })
 
 
 const category = new mongoose.model("category", categorySchema)

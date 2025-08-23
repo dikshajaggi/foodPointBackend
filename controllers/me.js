@@ -11,6 +11,10 @@ const changePassword = async (req, res, next) => {
     const isMatch = await userExists.comparePasswords(oldPassword);
     if (!isMatch) return res.status(401).json({ msg: "Old password is incorrect" });
 
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ msg: "New password must be at least 6 characters long" });
+    }
+
     userExists.password = newPassword;
     await userExists.save();
 
@@ -64,7 +68,7 @@ const deleteSingleAddress = async(req, res, next) => {
         return res.status(400).json({ msg: "Cannot delete the only saved address" });
       }
 
-      userExists.address.filter(item => item.label.toLowerCase() !== label.toLowerCase())
+      userExists.address = userExists.address.filter(item => item.label.toLowerCase() !== label.toLowerCase());
       await userExists.save()
       return res.status(200).json({ msg: "Address deleted successfully" });
     }

@@ -10,13 +10,19 @@ const register = async (req, res, next) => {
 
         const userExists = await user.findOne({email}) 
 
+        // Ensure address has label, else default to 'home'
+        const userAddress = address
+        ? [{ ...address, label: address.label || "home" }]
+        : [];
+
         if (userExists) {
             res.status(409).json({msg: "user with this email is already registered"})
         } else {
-            const newUser = await user.create({username, email, password, phoneNo, address: [{ ...address, label: "home" }]})
-            res.status(200).json({msg: "registration successful", data: newUser, token: await newUser.generateToken()})
+            const newUser = await user.create({username, email, password, phoneNo, address: userAddress})
+            const safeUser = newUser.toObject();
+            delete safeUser.password;
+            res.status(201).json({msg: "registration successful", data: safeUser, token: await newUser.generateToken()})
         }
-
     } catch (error) {
         res.status(500).json({ msg: "Server error during registration", error: error });
         next(error)

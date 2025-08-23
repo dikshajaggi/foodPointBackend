@@ -27,10 +27,19 @@ const addNewCategory = async (req, res, next) => {
 }
 
 const deleteCategory = async (req, res, next) => {
+
+// Don't just delete the category. What if restaurants are still linked to that category?
+// Industry practice: Either prevent deletion if restaurants reference it, or cascade update to unlink the category.
+
     try {
         const {id} = req.params
         const categoryExists = await category.findById(id)
         if (!categoryExists) return res.status(404).json({msg: "category with this name doesn't exist"})    
+
+        const restaurantWithCategory = await restaurant.findOne({ cuisines: id });
+        if (restaurantWithCategory) {
+            return res.status(400).json({ msg: "Cannot delete category as it is linked to restaurants" });
+        }
 
         await category.findByIdAndDelete(id)
         
@@ -46,14 +55,14 @@ const updateCategory = async (req, res, next) => {
         const {id} = req.params
 
         const categoryExists = await category.findById(id)
-        if (!categoryExists) return res.status(409).json({msg: "category with this name doesn't exist"})  
+        if (!categoryExists) return res.status(409).json({msg: "category with this name doesn't exist", data: [] })  
             
         const image = req?.file
         let imageUrl= ""
 
         if(image) {
             const resImage = await uploadOnCloudinary(image.path);
-            if (!resImage?.secure_url) return resImage.status(500).json({ msg: "Image upload failed" });
+            if (!resImage?.secure_url) return res.status(500).json({ msg: "Image upload failed" });
             imageUrl = resImage.secure_url;
         }
 
@@ -81,11 +90,13 @@ const getAllCategories = async(req, res, next) => {
 
 
 const restaurantsByCategory = async (req, res, next) => {
+
+    // while returning restuarants ---> apply pagination 
     try {
         const {cuisine} = req.params
 
         const categoryExists = await category.findOne({name: cuisine})
-        // if (!categoryExists) return res.status(409).json({msg: "category with this name doesn't exist"})  
+        if (!categoryExists) return res.status(409).json({msg: "category with this name doesn't exist"})  
         
         const matchedRests = await restaurant.find({cuisines: {$in : [cuisine.toLowerCase()]}}) // matches if cuisine exists in cuisines array
 
